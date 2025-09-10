@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Clientes IPTV</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000000;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+        }
+        .table-hover:hover {
+            background-color: rgba(55, 65, 81, 0.5);
+        }
+        .status-active {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: rgb(74, 222, 128);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status-inactive {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: rgb(248, 113, 113);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status-expired {
+            background-color: rgba(239, 68, 68, 0.3);
+            color: rgb(239, 68, 68);
+            border: 1px solid rgb(239, 68, 68);
+            animation: blink 1.5s infinite;
+        }
+        .status-expiring {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: rgb(245, 158, 11);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .alert-badge {
+            background-color: #dc2626;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 50%;
+            margin-left: 8px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.6; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        }
+        .input-field {
+            background-color: #1f2937;
+            border: 2px solid #374151;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #dc2626;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        .card-bg {
+            background: linear-gradient(135deg, #111827, #1f2937);
+            border: 1px solid #374151;
+            backdrop-filter: blur(10px);
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #000000, #111827);
+            border-bottom: 2px solid #374151;
+        }
+        .notification-banner {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border: 1px solid #ef4444;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            transition: all 0.3s ease;
+        }
+        .whatsapp-btn:hover {
+            background: linear-gradient(135deg, #128C7E, #075E54);
+            transform: scale(1.1);
+        }
+        .edit-btn {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            transition: all 0.3s ease;
+        }
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #1D4ED8, #1E40AF);
+            transform: scale(1.1);
+        }
+        .delete-btn {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            transition: all 0.3s ease;
+        }
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header-bg p-6 shadow-2xl">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-4xl font-bold flex items-center gap-3">
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"></path>
+                </svg>
+                Gerenciador IPTV Pro
+            </h1>
+            <p class="text-gray-300 mt-2 text-lg">Gerencie seus clientes de forma profissional e eficiente</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto p-6">
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="hidden notification-banner rounded-xl p-4 mb-6 shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <span id="alert-text" class="text-white font-semibold text-lg"></span>
+                </div>
+                <button id="close-alert" class="text-white hover:text-gray-300 transition-colors p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="card-bg rounded-xl p-6 stats-card shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm font-medium">Total de Clientes</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="total-clients">0</p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-bg rounded-xl p-6 stats-card shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm font-medium">Clientes Ativos</p>
+                        <p class="text-3xl font-bold text-green-400 mt-2" id="active-clients">0</p>
+                    </div>
+                    <div class="bg-green-900 bg-opacity-30 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-bg rounded-xl p-6 stats-card shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm font-medium">Clientes Inativos</p>
+                        <p class="text-3xl font-bold text-red-400 mt-2" id="inactive-clients">0</p>
+                    </div>
+                    <div class="bg-red-900 bg-opacity-30 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-bg rounded-xl p-6 stats-card shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm font-medium">Vencendo em 7 dias</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-2" id="expiring-clients">0</p>
+                    </div>
+                    <div class="bg-yellow-900 bg-opacity-30 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <div class="relative flex-1">
+                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Buscar por nome, usuário ou WhatsApp..."
+                    class="w-full input-field rounded-xl pl-12 pr-4 py-4 placeholder-gray-400 text-lg"
+                />
+            </div>
+            <button
+                id="add-client-btn"
+                class="btn-primary text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-3 text-lg"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Adicionar Cliente
+            </button>
+        </div>
+
+        <!-- Clients Table -->
+        <div class="card-bg rounded-xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead style="background: linear-gradient(135deg, #374151, #4B5563); border-bottom: 2px solid #6B7280;">
+                        <tr>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Usuário</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Senha</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Servidor</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">Vencimento</th>
+                            <th class="px-6 py-5 text-left text-sm font-bold text-gray-200 uppercase tracking-wider">WhatsApp</th>
+                            <th class="px-6 py-5 text-center text-sm font-bold text-gray-200 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-table" class="divide-y divide-gray-700">
+                        <tr>
+                            <td colspan="8" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center gap-4">
+                                    <svg class="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                                    </svg>
+                                    <p class="text-gray-400 text-xl">Nenhum cliente cadastrado</p>
+                                    <p class="text-gray-500 text-sm">Clique em "Adicionar Cliente" para começar</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50">
+        <div class="card-bg rounded-2xl p-8 w-full max-w-2xl shadow-2xl">
+            <div class="flex items-center justify-between mb-8">
+                <h2 id="modal-title" class="text-3xl font-bold text-white">Adicionar Cliente</h2>
+                <button id="close-modal-x" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Nome do Cliente *</label>
+                    <input
+                        type="text"
+                        id="client-name"
+                        class="w-full input-field rounded-xl px-4 py-3 placeholder-gray-400"
+                        placeholder="Digite o nome completo"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">WhatsApp *</label>
+                    <input
+                        type="tel"
+                        id="client-whatsapp"
+                        class="w-full input-field rounded-xl px-4 py-3 placeholder-gray-400"
+                        placeholder="(00) 00000-0000"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Usuário IPTV *</label>
+                    <input
+                        type="text"
+                        id="client-username"
+                        class="w-full input-field rounded-xl px-4 py-3 placeholder-gray-400"
+                        placeholder="Nome de usuário"
+                        style="font-family: monospace;"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Senha IPTV *</label>
+                    <input
+                        type="password"
+                        id="client-password"
+                        class="w-full input-field rounded-xl px-4 py-3 placeholder-gray-400"
+                        placeholder="Digite a senha"
+                        style="font-family: monospace;"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Servidor *</label>
+                    <input
+                        type="text"
+                        id="client-server"
+                        class="w-full input-field rounded-xl px-4 py-3 placeholder-gray-400"
+                        placeholder="URL do servidor"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Data de Vencimento *</label>
+                    <input
+                        type="date"
+                        id="client-expiry"
+                        class="w-full input-field rounded-xl px-4 py-3"
+                    />
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-300 mb-3">Status</label>
+                    <select
+                        id="client-status"
+                        class="w-full input-field rounded-xl px-4 py-3"
+                    >
+                        <option value="ativo">✅ Ativo</option>
+                        <option value="inativo">❌ Inativo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 pt-8">
+                <button
+                    id="cancel-btn"
+                    class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-xl font-semibold transition-all duration-300 text-lg"
+                >
+                    Cancelar
+                </button>
+                <button
+                    id="save-btn"
+                    class="flex-1 btn-primary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-lg"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <span id="save-btn-text">Adicionar Cliente</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação
+        let clients = JSON.parse(localStorage.getItem('iptv-clients') || '[]');
+        let editingClientId = null;
+
+        // Elementos DOM
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const saveBtnText = document.getElementById('save-btn-text');
+        const clientsTable = document.getElementById('clients-table');
+        const searchInput = document.getElementById('search-input');
+        const alertBanner = document.getElementById('alert-banner');
+        const alertText = document.getElementById('alert-text');
+
+        // Campos do formulário
+        const nameInput = document.getElementById('client-name');
+        const usernameInput = document.getElementById('client-username');
+        const passwordInput = document.getElementById('client-password');
+        const serverInput = document.getElementById('client-server');
+        const statusInput = document.getElementById('client-status');
+        const whatsappInput = document.getElementById('client-whatsapp');
+        const expiryInput = document.getElementById('client-expiry');
+
+        // Event listeners
+        document.getElementById('add-client-btn').addEventListener('click', () => openModal());
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('close-modal-x').addEventListener('click', closeModal);
+        document.getElementById('save-btn').addEventListener('click', handleSave);
+        document.getElementById('close-alert').addEventListener('click', () => alertBanner.classList.add('hidden'));
+        searchInput.addEventListener('input', renderTable);
+
+        // Definir data mínima como hoje
+        const today = new Date().toISOString().split('T')[0];
+        expiryInput.min = today;
+
+        // Funções principais
+        function openModal(client = null) {
+            editingClientId = client ? client.id : null;
+            
+            if (client) {
+                modalTitle.textContent = 'Editar Cliente';
+                saveBtnText.textContent = 'Salvar Alterações';
+                nameInput.value = client.name;
+                usernameInput.value = client.username;
+                passwordInput.value = client.password;
+                serverInput.value = client.server;
+                statusInput.value = client.status;
+                whatsappInput.value = client.whatsapp;
+                expiryInput.value = client.expiry || '';
+            } else {
+                modalTitle.textContent = 'Adicionar Cliente';
+                saveBtnText.textContent = 'Adicionar Cliente';
+                resetForm();
+            }
+            
+            modal.classList.remove('hidden');
+            nameInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            resetForm();
+            editingClientId = null;
+        }
+
+        function resetForm() {
+            nameInput.value = '';
+            usernameInput.value = '';
+            passwordInput.value = '';
+            serverInput.value = '';
+            statusInput.value = 'ativo';
+            whatsappInput.value = '';
+            expiryInput.value = '';
+        }
+
+        function handleSave() {
+            // Validação
+            if (!nameInput.value.trim() || !usernameInput.value.trim() || !passwordInput.value.trim() || 
+                !serverInput.value.trim() || !whatsappInput.value.trim() || !expiryInput.value) {
+                showNotification('❌ Por favor, preencha todos os campos obrigatórios!', 'error');
+                return;
+            }
+
+            // Verificar se a data não é no passado (apenas para novos clientes ou se a data foi alterada)
+            const selectedDate = new Date(expiryInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate < today) {
+                showNotification('⚠️ A data de vencimento não pode ser no passado!', 'warning');
+                return;
+            }
+
+            const clientData = {
+                name: nameInput.value.trim(),
+                username: usernameInput.value.trim(),
+                password: passwordInput.value.trim(),
+                server: serverInput.value.trim(),
+                status: statusInput.value,
+                whatsapp: whatsappInput.value.trim(),
+                expiry: expiryInput.value
+            };
+
+            if (editingClientId) {
+                // Editar cliente existente
+                const index = clients.findIndex(c => c.id === editingClientId);
+                clients[index] = { ...clientData, id: editingClientId };
+                showNotification('✅ Cliente atualizado com sucesso!', 'success');
+            } else {
+                // Adicionar novo cliente
+                const newClient = { ...clientData, id: Date.now() };
+                clients.push(newClient);
+                showNotification('✅ Cliente adicionado com sucesso!', 'success');
+            }
+
+            saveClients();
+            renderTable();
+            updateStats();
+            checkExpiringClients();
+            closeModal();
+        }
+
+        function deleteClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (confirm(`Tem certeza que deseja excluir o cliente "${client.name}"?\n\nEsta ação não pode ser desfeita.`)) {
+                clients = clients.filter(c => c.id !== id);
+                saveClients();
+                renderTable();
+                updateStats();
+                checkExpiringClients();
+                showNotification('🗑️ Cliente excluído com sucesso!', 'success');
+            }
+        }
+
+        function toggleStatus(id) {
+            const client = clients.find(c => c.id === id);
+            const oldStatus = client.status;
+            client.status = client.status === 'ativo' ? 'inativo' : 'ativo';
+            saveClients();
+            renderTable();
+            updateStats();
+            checkExpiringClients();
+            showNotification(`🔄 Status alterado: ${client.name} agora está ${client.status.toUpperCase()}`, 'info');
+        }
+
+        function sendWhatsAppMessage(client) {
+            const expiryDate = new Date(client.expiry);
+            const today = new Date();
+            const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+            
+            let expiryMessage = '';
+            let urgencyIcon = '';
+            
+            if (daysUntilExpiry < 0) {
+                expiryMessage = `🚨 URGENTE: Seu acesso VENCEU há ${Math.abs(daysUntilExpiry)} dias!`;
+                urgencyIcon = '🚨';
+            } else if (daysUntilExpiry === 0) {
+                expiryMessage = `⚠️ ATENÇÃO: Seu acesso VENCE HOJE!`;
+                urgencyIcon = '⚠️';
+            } else if (daysUntilExpiry <= 3) {
+                expiryMessage = `🔥 URGENTE: Seu acesso vence em apenas ${daysUntilExpiry} dia(s)!`;
+                urgencyIcon = '🔥';
+            } else if (daysUntilExpiry <= 7) {
+                expiryMessage = `⚠️ AVISO: Seu acesso vence em ${daysUntilExpiry} dias!`;
+                urgencyIcon = '⚠️';
+            } else {
+                expiryMessage = `📅 Lembrete: Seu acesso vence em ${daysUntilExpiry} dias (${expiryDate.toLocaleDateString('pt-BR')})`;
+                urgencyIcon = '📅';
+            }
+
+            const message = `${urgencyIcon} *Olá querido(a) - ${client.name}* ${urgencyIcon}
+
+${expiryMessage}
+
+*📋 DADOS DE ACESSO:*
+👤 *Usuário:* ${client.username}
+🔐 *Senha:* ${client.password}
+🖥️ *Servidor:* ${client.server}
+📅 *Vencimento:* ${expiryDate.toLocaleDateString('pt-BR')}
+📊 *Status:* ${client.status.toUpperCase()}
+
+${daysUntilExpiry <= 0 ? '🚨 *ACESSO BLOQUEADO* - Renove para continuar assistindo!' : ''}
+${daysUntilExpiry <= 3 && daysUntilExpiry > 0 ? '⏰ *ATENÇÃO* - Renove agora para evitar interrupção!' : ''}
+
+💬 *Para renovar seu plano:*
+• Utilize a chave pix abaixo 
+• Nos envie o comprovante de pagamento assim que possível 
+
+✨ *Obrigada pela preferência*
+_Equipe Aura Play_`;
+            
+            const whatsappNumber = client.whatsapp.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Criar elemento de notificação
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-lg z-50 transition-all duration-500 transform translate-x-full`;
+            
+            const colors = {
+                success: 'bg-green-600 border border-green-500',
+                error: 'bg-red-600 border border-red-500',
+                warning: 'bg-yellow-600 border border-yellow-500',
+                info: 'bg-blue-600 border border-blue-500'
+            };
+            
+            notification.className += ` ${colors[type] || colors.info}`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3 text-white">
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="hover:text-gray-300 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animar entrada
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remover automaticamente após 5 segundos
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
+        }
+
+        function saveClients() {
+            localStorage.setItem('iptv-clients', JSON.stringify(clients));
+        }
+
+        function getFilteredClients() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            if (!searchTerm) return clients;
+            
+            return clients.filter(client =>
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.username.toLowerCase().includes(searchTerm) ||
+                client.whatsapp.includes(searchTerm) ||
+                client.server.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        function getExpiryStatus(expiry) {
+            if (!expiry) return { status: 'no-expiry', class: '', days: 0 };
+            
+            const expiryDate = new Date(expiry);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            expiryDate.setHours(0, 0, 0, 0);
+            
+            const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilExpiry < 0) {
+                return { 
+                    status: 'expired', 
+                    class: 'status-expired', 
+                    days: daysUntilExpiry, 
+                    text: `Vencido há ${Math.abs(daysUntilExpiry)} dia(s)`,
+                    badge: '🚨'
+                };
+            } else if (daysUntilExpiry === 0) {
+                return { 
+                    status: 'expires-today', 
+                    class: 'status-expired', 
+                    days: 0, 
+                    text: 'Vence hoje!',
+                    badge: '⚠️'
+                };
+            } else if (daysUntilExpiry <= 3) {
+                return { 
+                    status: 'expiring-very-soon', 
+                    class: 'status-expiring', 
+                    days: daysUntilExpiry, 
+                    text: `${daysUntilExpiry} dia(s)`,
+                    badge: '🔥'
+                };
+            } else if (daysUntilExpiry <= 7) {
+                return { 
+                    status: 'expiring-soon', 
+                    class: 'status-expiring', 
+                    days: daysUntilExpiry, 
+                    text: `${daysUntilExpiry} dias`,
+                    badge: '⚠️'
+                };
+            } else if (daysUntilExpiry <= 30) {
+                return { 
+                    status: 'active', 
+                    class: '', 
+                    days: daysUntilExpiry, 
+                    text: `${daysUntilExpiry} dias`
+                };
+            } else {
+                return { 
+                    status: 'active-long', 
+                    class: '', 
+                    days: daysUntilExpiry, 
+                    text: `${Math.ceil(daysUntilExpiry/30)} mês(es)`
+                };
+            }
+        }
+
+        function checkExpiringClients() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const expiredClients = [];
+            const expiringToday = [];
+            const expiringSoon = [];
+            
+            clients.forEach(client => {
+                if (!client.expiry) return;
+                
+                const expiryDate = new Date(client.expiry);
+                expiryDate.setHours(0, 0, 0, 0);
+                const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntilExpiry < 0) {
+                    expiredClients.push(client);
+                } else if (daysUntilExpiry === 0) {
+                    expiringToday.push(client);
+                } else if (daysUntilExpiry <= 7) {
+                    expiringSoon.push(client);
+                }
+            });
+            
+            let alertMessage = '';
+            if (expiredClients.length > 0) {
+                alertMessage = `🚨 ${expiredClients.length} cliente(s) com acesso VENCIDO!`;
+            } else if (expiringToday.length > 0) {
+                alertMessage = `⚠️ ${expiringToday.length} cliente(s) vencem HOJE!`;
+            } else if (expiringSoon.length > 0) {
+                alertMessage = `⚠️ ${expiringSoon.length} cliente(s) vencendo em até 7 dias!`;
+            }
+            
+            if (alertMessage) {
+                alertText.textContent = alertMessage;
+                alertBanner.classList.remove('hidden');
+            } else {
+                alertBanner.classList.add('hidden');
+            }
+        }
+
+        function renderTable() {
+            const filteredClients = getFilteredClients();
+            
+            if (filteredClients.length === 0) {
+                const emptyMessage = clients.length === 0 
+                    ? `<div class="flex flex-col items-center gap-4">
+                         <svg class="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                         </svg>
+                         <p class="text-gray-400 text-xl">Nenhum cliente cadastrado</p>
+                         <p class="text-gray-500 text-sm">Clique em "Adicionar Cliente" para começar</p>
+                       </div>`
+                    : `<div class="flex flex-col items-center gap-4">
+                         <svg class="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                         </svg>
+                         <p class="text-gray-400 text-xl">Nenhum cliente encontrado</p>
+                         <p class="text-gray-500 text-sm">Tente uma busca diferente</p>
+                       </div>`;
+                
+                clientsTable.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-16 text-center">
+                            ${emptyMessage}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            clientsTable.innerHTML = filteredClients.map(client => {
+                const expiryStatus = getExpiryStatus(client.expiry);
+                const expiryDate = client.expiry ? new Date(client.expiry).toLocaleDateString('pt-BR') : 'Não definido';
+                
+                return `
+                <tr class="table-hover transition-all duration-200 border-b border-gray-700">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                                <span class="text-sm font-bold text-white">${client.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-white font-semibold">${client.name}</span>
+                                    ${expiryStatus.badge ? `<span class="alert-badge">${expiryStatus.badge}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <code class="text-gray-300 bg-gray-800 px-2 py-1 rounded text-sm">${client.username}</code>
+                    </td>
+                    <td class="px-6 py-4">
+                        <code class="text-gray-300 bg-gray-800 px-2 py-1 rounded text-sm">${'•'.repeat(Math.min(client.password.length, 8))}</code>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-gray-300 text-sm">${client.server}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button
+                            onclick="toggleStatus(${client.id})"
+                            class="px-3 py-1 rounded-full text-xs font-bold transition-all duration-200 ${client.status === 'ativo' ? 'status-active' : 'status-inactive'}"
+                        >
+                            ${client.status === 'ativo' ? '✅ ATIVO' : '❌ INATIVO'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm">
+                            <div class="text-gray-300 font-medium">${expiryDate}</div>
+                            ${client.expiry ? `<div class="text-xs mt-1 ${expiryStatus.class || 'text-gray-400'} font-medium">${expiryStatus.text}</div>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-gray-300 text-sm">${client.whatsapp}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2 justify-center">
+                            <button
+                                onclick="sendWhatsAppMessage(${JSON.stringify(client).replace(/"/g, '&quot;')})"
+                                class="whatsapp-btn text-white p-2 rounded-lg shadow-lg"
+                                title="Enviar WhatsApp"
+                            >
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.569-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                                </svg>
+                            </button>
+                            <button
+                                onclick="openModal(${JSON.stringify(client).replace(/"/g, '&quot;')})"
+                                class="edit-btn text-white p-2 rounded-lg shadow-lg"
+                                title="Editar Cliente"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button
+                                onclick="deleteClient(${client.id})"
+                                class="delete-btn text-white p-2 rounded-lg shadow-lg"
+                                title="Excluir Cliente"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateStats() {
+            const totalClients = clients.length;
+            const activeClients = clients.filter(c => c.status === 'ativo').length;
+            const inactiveClients = clients.filter(c => c.status === 'inativo').length;
+            
+            // Calcular clientes vencendo em 7 dias
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const expiringClients = clients.filter(client => {
+                if (!client.expiry) return false;
+                const expiryDate = new Date(client.expiry);
+                expiryDate.setHours(0, 0, 0, 0);
+                const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
+            }).length;
+
+            // Atualizar elementos DOM
+            document.getElementById('total-clients').textContent = totalClients;
+            document.getElementById('active-clients').textContent = activeClients;
+            document.getElementById('inactive-clients').textContent = inactiveClients;
+            document.getElementById('expiring-clients').textContent = expiringClients;
+        }
+
+        // Fechar modal ao clicar fora dele
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                openModal();
+            }
+        });
+
+        // Inicializar aplicação
+        function init() {
+            renderTable();
+            updateStats();
+            checkExpiringClients();
+            
+            // Verificar clientes vencendo a cada 5 minutos
+            setInterval(() => {
+                checkExpiringClients();
+                updateStats();
+            }, 5 * 60 * 1000);
+            
+            showNotification('🚀 Sistema IPTV iniciado com sucesso!', 'success');
+        }
+
+        // Iniciar quando a página carregar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
